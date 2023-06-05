@@ -10,7 +10,7 @@ export const useFileData = ({
   onError,
 }: {
   imageTypes?: string[];
-  ref?: RefObject<HTMLInputElement>;
+  ref: RefObject<HTMLInputElement>;
   onSucess?: (items: Item[]) => void;
   //@ts-ignore
   onError?: (error: any) => void;
@@ -47,7 +47,7 @@ export const useFileData = ({
   };
 
   useEffect(() => {
-    if (ref && ref.current) {
+    if (ref.current) {
       ref.current.setAttribute('accept', imageTypes.join(', '));
       ref.current.onchange = (e) => {
         const target = e.target as HTMLInputElement;

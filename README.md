@@ -1,161 +1,88 @@
-# React Hooks to npm boilerplate
+# useFileData hook
 
-This repository is a boilerplate for creating custom React hooks and components that we can publish to NPM registry as packages.
+The useFileData hook is a custom React hook that helps use retrieve file data from input changes.
 
-I've put together a quick tutorial, it assumes an understanding of React, hooks and unit tests.
+```ts
+// Import useFileData
 
-If something is not clear, message me or raise an issue, I will explain in more detail.
+import { useFileData } from 'use-file-data';
 
-I've used this boilerplate to create my NPM package [https://www.npmjs.com/package/@nekogd/react-utility-hooks].
+// Attach a ref to your input
 
-## First things first
+import { useRef } from 'react';
+const inputRef = useRef<HTMLInputElement>(null);
+<input type="file" ref={inputRef} multiple />;
 
-Firstly, clone this repository. 
+// Get items with data
 
-Next, go over to package.json file and amend name, description and author keys.
-
-The package would be served on npm as per what you have typed in the "name".
-
-You may want to use scoped naming i.e. "@myscope/use-my-hook"
-
-More info: [https://docs.npmjs.com/using-npm/scope.html]
-
-## How we will be able to use your package
-
-It follows the common React path.
-
-Follow through the included useCounter example and you will be fine.
-
-Make sure to export your hook (I prefer named exports) in index.ts.
-
-Basically you have to do three things:
-
-a) write your hook (preferably test and type it)
-
-b) export it in index.ts file
-
-c) deploy to NPM
-
-We will able to use your hook like so:
-
-```
- import { useYourHook } from 'your-package-name'
+useFileData({
+  ref: inputRef,
+  onSuccess: (items) => setPreviewItems(items),
+});
 ```
 
-## Development commands
+<br/>
 
+## API
+
+<h3>useFileData(options: Object): Object</h3>
+
+- imageTypes (optional): An array of supported image MIME types. Defaults to an empty array.
+- ref : A ref to an HTML input element used for file selection.
+- onSuccess (optional): A callback function called with the resulting file items after successful file processing.
+- onError (optional): A callback function called when an error occurs during file processing or incorrect image MIME types.
+
+<h3>The useFileData hook returns an object with the following properties: </h3>
+
+- isLoadingPreviews: A boolean indicating if file previews are currently being loaded.
+- error: The error object or string if an error occurred during file processing.
+- isError: A boolean indicating if an error occurred.
+- items: An array of file items containing the file, id, and data properties.
+
+<br/>
+
+## Complete example
+
+```ts
+import React, { useRef, useState } from 'react';
+import { useFileData } from 'use-file-data';
+
+const App = () => {
+  const imageMimeTypes = ['image/jpeg', 'image/png'];
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [previewItems, setPreviewItems] = useState<Item[]>([]);
+
+  const { isLoadingPreviews, error, isError, items } = useFileData({
+    imageTypes: imageMimeTypes,
+    ref: inputRef,
+    onSuccess: (items) => setPreviewItems(items),
+    onError: (error) => console.log(error),
+  });
+
+  if (isLoadingPreviews) {
+    return <div>Loading previews...</div>;
+  }
+
+  if (isError) {
+    return <div>Error: {error}</div>;
+  }
+
+  if (previewItems.length > 0) {
+    return (
+      <div>
+        {previewItems.map((item) => (
+          <img key={item.id} src={item.data} alt={item.file.name} />
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <input type="file" ref={inputRef} multiple />
+    </div>
+  );
+};
+
+export default App;
 ```
- // watch
- yarn start
-
- // or
- npm run start
-```
-
-```
- // builds the dist folder
- yarn build
-
- // or
- npm run build
-```
-
-```
- // starts tests
- yarn test
-
- // or
-
- npm run test
-```
-
-## Local testing and yarn link
-
-To locally test the package, do the following:
-
-Let's assume your package name is "use-my-counter" and your CRA is "my-app".
-
-Let's also assume they are in one workspace.
-
-```
-workspace
-  - use-my-counter
-  - my-app
-```
-
-a) in hook folder, run
-```
-yarn link
-```
-b) assuming you have a workspace, create a sample CRA app 
-```
-npx create-react-app my-app
-```
-c) navigate to your CRA app folder
-```
-cd my-app
-```
-d) run command
-```
- yarn link use-my-counter
-```
-e)  In your CRA app, you can now user package, as it's linked locally 
-```
-  import { useMyCounter } from 'use-my-counter';
-```
-
-f) However, this will give you an error due to different copy of React and in CRA app. 
-   To counter that let's assume that we have workspace
-```
-workspace
-  - use-my-counter
-  - my-app
-```
-  We navigate to use-my-counter and type (this will link the React versions locally). 
-  
-  Please amend the path to your needs.
-  ```
-   npm link ../my-app/node_modules/react
-  ```
-  We should be good to go to work locally. 
-
-## Deployment to NPM
-
-### Login to correct NPM account
-
-```
-npm login
-```
-
-### Versioning
-
-Increase the version number as per NPM guides [https://docs.npmjs.com/about-semantic-versioning].
-
-```
-// increases the first digit i.e. from 0.5.4 to 1.0.0
-npm version major
-
-// increases the second digit i.e. from 0.0.3 to 0.1.0
-npm version minor
-
-// increases the third digit i.e. from 0.0.1 to 0.0.2
-npm version patch
-```
-
-### Deployment
-
-Run the command and the package should be up.
-
-```
-npm publish --access public
-```
-
-### What If I want to export a component? 
-
-You can do that too, following same pattern as you'd with hooks.
-
-Bear in mind you'd propably need .tsx file and not .ts.
-
-### Share with the world
-
-Share your work and learnings with the world! :)
