@@ -1,31 +1,84 @@
-import { RefObject, useEffect, useState } from 'react';
+import { useReducer, useRef } from 'react';
 import { readFileAsDataUrl, validTypeFiles } from './helpers';
 
 type Item = { file: File; id: number; data: string };
 
+type State = {
+  result: Item[] | null;
+  isLoadingPreviews: boolean;
+  //@ts-ignore
+  error: any;
+  isError: boolean;
+};
+
+const initialState = {
+  result: null,
+  isLoadingPreviews: false,
+  error: null,
+  isError: false,
+};
+
+type Action =
+  | { type: 'PREVIEW_START' }
+  | { type: 'PREVIEW_SUCCESS'; result: Item[] }
+  | { type: 'PREVIEW_FAIL'; error: any; isError: boolean }
+  | { type: 'VALIDATION_FAIL' };
+
+const reducer = (state: State, action: Action): State => {
+  switch (action.type) {
+    case 'PREVIEW_START':
+      return { ...state, isLoadingPreviews: true };
+    case 'PREVIEW_SUCCESS':
+      return { ...state, isLoadingPreviews: false, result: action.result };
+    case 'PREVIEW_FAIL':
+      return {
+        ...state,
+        isLoadingPreviews: false,
+        error: action.error,
+        isError: action.isError,
+      };
+    case 'VALIDATION_FAIL':
+      return { ...state, error: 'Invalid image types', isError: true };
+    default:
+      throw new Error(`Unhandled action type: ${action}`);
+  }
+};
+
 export const useFileData = ({
   imageTypes = [],
-  ref,
   onSucess,
   onError,
 }: {
   imageTypes?: string[];
-  ref: RefObject<HTMLInputElement>;
-  onSucess?: (items: Item[]) => void;
+  onSucess?: (result: Item[]) => void;
   //@ts-ignore
   onError?: (error: any) => void;
 }) => {
-  const [isLoadingPreviews, setIsLoadingPreviews] = useState(false);
-  const [items, setItems] = useState<Item[]>([]);
-  //@ts-ignore
-  const [error, setError] = useState<any>(null);
-  const [isError, setIsError] = useState<boolean>(false);
-  const [testFiles, setTestFiles] = useState<FileList | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [state, dispatch] = useReducer(reducer, initialState);
+
+  const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.currentTarget.files;
+    if (files) {
+      const valid = validTypeFiles(imageTypes, files);
+      if (!valid) {
+        dispatch({ type: 'VALIDATION_FAIL' });
+        onError && onError(state.error);
+      }
+      getPreviews(files);
+    }
+  };
+
+  const register = {
+    onChange,
+    accept: imageTypes.join(', '),
+    ref: inputRef,
+  };
 
   const getPreviews = async (files: FileList | null) => {
     try {
       if (!files) return;
-      setIsLoadingPreviews(true);
+      dispatch({ type: 'PREVIEW_START' });
       const promises = Array.from(files).map((file) => readFileAsDataUrl(file));
       const previews = await Promise.all(promises);
 
@@ -35,38 +88,16 @@ export const useFileData = ({
         data: previews[i],
       }));
 
-      setIsLoadingPreviews(false);
-      setItems(items);
+      dispatch({ type: 'PREVIEW_SUCCESS', result: items });
       onSucess && onSucess(items);
       //@ts-ignore
     } catch (error: any) {
-      setIsLoadingPreviews(false);
-      setError(error);
+      dispatch({ type: 'PREVIEW_FAIL', error, isError });
       onError && onError(error);
     }
   };
 
-  useEffect(() => {
-    if (ref.current) {
-      ref.current.setAttribute('accept', imageTypes.join(', '));
-      ref.current.onchange = (e) => {
-        const target = e.target as HTMLInputElement;
-        setTestFiles(target.files);
-      };
-    }
-    console.log('testfiles changed');
-  }, [testFiles]);
+  const { isLoadingPreviews, error, result, isError } = state;
 
-  useEffect(() => {
-    setIsError(false);
-    setError(null);
-    if (!validTypeFiles(imageTypes, testFiles)) {
-      setIsError(true);
-      setError('Invalid Image types');
-      onError && onError(error);
-    }
-    getPreviews(testFiles);
-  }, [testFiles, imageTypes]);
-
-  return { isLoadingPreviews, error, items, isError };
+  return { isLoadingPreviews, error, result, isError, register };
 };

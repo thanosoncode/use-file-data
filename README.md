@@ -44,18 +44,19 @@ useFileData({
 ## Complete example
 
 ```ts
-import React, { useRef, useState } from 'react';
-import { useFileData } from 'use-file-data';
+import { useState } from 'react';
+import { useFileData } from './useFileData';
+
+type Item = { file: File; id: number; data: string };
+
+const imageMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
 
 const App = () => {
-  const imageMimeTypes = ['image/jpeg', 'image/png'];
-  const inputRef = useRef<HTMLInputElement>(null);
   const [previewItems, setPreviewItems] = useState<Item[]>([]);
 
-  const { isLoadingPreviews, error, isError, items } = useFileData({
+  const { isLoadingPreviews, error, isError, register } = useFileData({
     imageTypes: imageMimeTypes,
-    ref: inputRef,
-    onSuccess: (items) => setPreviewItems(items),
+    onSucess: (items) => setPreviewItems(items),
     onError: (error) => console.log(error),
   });
 
@@ -67,19 +68,16 @@ const App = () => {
     return <div>Error: {error}</div>;
   }
 
-  if (previewItems.length > 0) {
-    return (
-      <div>
-        {previewItems.map((item) => (
-          <img key={item.id} src={item.data} alt={item.file.name} />
-        ))}
-      </div>
-    );
-  }
-
   return (
     <div>
-      <input type="file" ref={inputRef} multiple />
+      {previewItems.length > 0 ? (
+        <div>
+          {previewItems.map((item) => (
+            <img key={item.id} src={item.data} alt={item.file.name} />
+          ))}
+        </div>
+      ) : null}
+      <input type="file" multiple {...register} title="hello" />
     </div>
   );
 };
