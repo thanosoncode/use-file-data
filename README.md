@@ -4,17 +4,12 @@ The useFileData hook is a custom React hook that helps use retrieve file data fr
 
 ```ts
 // Import useFileData
-
 import { useFileData } from 'use-file-data';
 
-// Attach a ref to your input
-
-import { useRef } from 'react';
-const inputRef = useRef<HTMLInputElement>(null);
-<input type="file" ref={inputRef} multiple />;
+// Add {...register} to your input
+<input type="file" multiple {...register} />;
 
 // Get items with data
-
 useFileData({
   ref: inputRef,
   onSuccess: (items) => setPreviewItems(items),
@@ -27,8 +22,8 @@ useFileData({
 
 <h3>useFileData(options: Object): Object</h3>
 
-- imageTypes (optional): An array of supported image MIME types. Defaults to an empty array.
-- ref : A ref to an HTML input element used for file selection.
+- register : An object with props to pass to your input. (ref, onChange, accept)
+- imageTypes (optional): An array of supported image MIME types that will be used to fill the accept prop. Defaults to an empty array.
 - onSuccess (optional): A callback function called with the resulting file items after successful file processing.
 - onError (optional): A callback function called when an error occurs during file processing or incorrect image MIME types.
 
@@ -37,7 +32,7 @@ useFileData({
 - isLoadingPreviews: A boolean indicating if file previews are currently being loaded.
 - error: The error object or string if an error occurred during file processing.
 - isError: A boolean indicating if an error occurred.
-- items: An array of file items containing the file, id, and data properties.
+- result: An array of file items containing the file, id, and the created data properties.
 
 <br/>
 
@@ -77,7 +72,7 @@ const App = () => {
           ))}
         </div>
       ) : null}
-      <input type="file" multiple {...register} title="hello" />
+      <input type="file" multiple {...register} />
     </div>
   );
 };
