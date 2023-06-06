@@ -39,7 +39,7 @@ useFileData({
 
 ```ts
 import { useState } from 'react';
-import { useFileData } from './useFileData';
+import { useFileData } from 'use-file-data';
 
 type Item = { file: File; id: number; data: string };
 
