@@ -1,4 +1,4 @@
-import { useReducer, useRef } from 'react';
+import { useEffect, useReducer, useRef } from 'react';
 import { readFileAsDataUrl, validTypeFiles } from './helpers';
 
 type Item = { file: File; id: number; data: string };
@@ -9,10 +9,12 @@ type State = {
   //@ts-ignore
   error: any;
   isError: boolean;
+  localFiles: FileList | null;
 };
 
 const initialState = {
   result: null,
+  localFiles: null,
   isLoadingPreviews: false,
   error: null,
   isError: false,
@@ -22,7 +24,8 @@ type Action =
   | { type: 'PREVIEW_START' }
   | { type: 'PREVIEW_SUCCESS'; result: Item[] }
   | { type: 'PREVIEW_FAIL'; error: any; isError: boolean }
-  | { type: 'VALIDATION_FAIL' };
+  | { type: 'VALIDATION_FAIL' }
+  | { type: 'SET_LOCAL_FILES'; files: FileList | null };
 
 const reducer = (state: State, action: Action): State => {
   switch (action.type) {
@@ -39,6 +42,8 @@ const reducer = (state: State, action: Action): State => {
       };
     case 'VALIDATION_FAIL':
       return { ...state, error: 'Invalid image types', isError: true };
+    case 'SET_LOCAL_FILES':
+      return { ...state, localFiles: action.files };
     default:
       throw new Error(`Unhandled action type: ${action}`);
   }
@@ -60,6 +65,8 @@ export const useFileData = ({
   const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.currentTarget.files;
     if (files) {
+      dispatch({ type: 'SET_LOCAL_FILES', files });
+
       const valid = validTypeFiles(imageTypes, files);
       if (!valid) {
         dispatch({ type: 'VALIDATION_FAIL' });
@@ -68,6 +75,12 @@ export const useFileData = ({
       getPreviews(files);
     }
   };
+
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.files = state.localFiles;
+    }
+  }, [inputRef, state.result]);
 
   const register = {
     onChange,
