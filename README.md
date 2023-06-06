@@ -1,6 +1,6 @@
 # useFileData hook
 
-The useFileData hook is a custom React hook that helps use retrieve file data from input changes.
+A custom React hook that retrieves file data from input changes.
 
 ```ts
 // Import useFileData
