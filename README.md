@@ -11,8 +11,7 @@ import { useFileData } from 'use-file-data';
 
 // Get items with data
 useFileData({
-  ref: inputRef,
-  onSuccess: (items) => setPreviewItems(items),
+  onSuccess: (items) => console.log(items),
 });
 ```
 

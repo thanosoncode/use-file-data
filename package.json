@@ -1,6 +1,6 @@
 {
   "name": "use-file-data",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A custom React hook that handles file data generation from input files",
   "author": "thanosoncode",
   "license": "MIT",
